@@ -12,5 +12,8 @@ export const FormEnum = {
     CHECKBOX: 'checkbox',
     TOGGLE_BUTTON: 'toggle_button',
     SELECT: 'select',
-    TREE_SELECT: 'tree_select'
+    TREE_SELECT: 'tree_select',
+    MULTI_SELECT: 'multi_select',
+    PASSWORD: 'password',
+    COMPONENT: 'component'
 }

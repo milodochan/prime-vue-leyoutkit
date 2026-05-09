@@ -1,5 +1,6 @@
 <script setup>
-import { inject, markRaw, onBeforeUnmount, onMounted, useSlots } from 'vue'
+import { markRaw, onBeforeUnmount, onMounted, useSlots } from 'vue'
+import { columnSlotStore } from '../store'
 
 const props = defineProps({
     name: {
@@ -8,13 +9,12 @@ const props = defineProps({
     }
 })
 
-const slotMap = inject('columnSlotMap')
 const slots = useSlots()
 
 onMounted(() => {
     const slotRender = slots.default
     // 保存一个真正的函数式组件
-    slotMap.value.set(
+    columnSlotStore.value.set(
         props.name,
         markRaw({
             // 这里返回的是函数式组件对象
@@ -22,9 +22,8 @@ onMounted(() => {
                 // console.log(attrs)
                 // console.log(attrs.content)
                 return () => slotRender?.({
-                    props: props,   // 外部传入的数据都在 attrs
-                    attrs: attrs.props,
-                    content: attrs.content
+                    props: { ...props, ...attrs.props },   // 外部传入的数据都在 attrs
+                    data: attrs.content
                 })
             }
         })
@@ -32,7 +31,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-    slotMap.value.delete(props.name)
+    columnSlotStore.value.delete(props.name)
 })
 
 </script>

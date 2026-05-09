@@ -1,7 +1,9 @@
 <script setup>
-import { ref, inject, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { FormEnum } from '../enum/FormEnum'
+import { formSlotStore } from '../store'
 
+const emit = defineEmits(['update'])
 const props = defineProps({
     invalid: Boolean,
     message: String,
@@ -9,24 +11,80 @@ const props = defineProps({
     data: Object
 })
 
-// 配置和初始数据
+const isSlot = ref(false)
 const formData = props.data
-const disabledLabel = props.item?.disabledLabel || false
 const field = props.item?.field
 const fieldType = props.item?.fieldType
-const fieldAttr = computed(() => {
-    const item = props.item
-    const attrs = item?.fieldAttr
-    if (item.attrFunc) {
-        let newAttrs = item.attrFunc(formData, item.fieldAttr)
-        Object.assign(attrs, newAttrs)
+const disabledLabel = props.item?.disabledLabel || false
+const model = computed({
+    get() {
+        let val = formData[field]
+        if (fieldType === FormEnum.TREE_SELECT) {
+            if (Array.isArray(val)) {
+                return val.reduce((acc, key) => {
+                    if (key) acc[key] = true
+                    return acc
+                }, {})
+            }
+            else return val ? { [val]: true } : {}
+        }
+
+        if (fieldType === FormEnum.DATE_PICKER) {
+            if (val && val.includes('T')) {
+                if (props.item.props.showTime) val = val.split('T')
+                else val = val.split('T')[0]
+            }
+        }
+
+        return val
+    },
+    set(val) {
+        if (fieldType === FormEnum.TREE_SELECT) {
+            if (typeof val === 'object') {
+                const keys = Object.keys(val)
+                formData[field] = keys.length > 1 ? keys : keys[0]
+                return
+            }
+        }
+        formData[field] = val
     }
-    return attrs
 })
-// isSlot
-const isSlot = ref(false)
-// 提供默认空 Map，防止 inject 失败
-const formSlotMap = inject('formSlotMap', ref(new Map()))
+// 占时不用了
+// const formatDateTime = (date, showTime = true) => {
+//     if (!date) return null
+
+//     const d = date instanceof Date ? date : new Date(date)
+
+//     const y = d.getFullYear()
+//     const m = String(d.getMonth() + 1).padStart(2, '0')
+//     const day = String(d.getDate()).padStart(2, '0')
+
+//     let timeSuffix = '00:00:00'
+//     if (showTime) {
+//         const hh = String(d.getHours()).padStart(2, '0')
+//         const mm = String(d.getMinutes()).padStart(2, '0')
+//         const ss = String(d.getSeconds()).padStart(2, '0')
+//         timeSuffix = `${hh}:${mm}:${ss}`
+//     }
+
+//     return `${y}-${m}-${day} ${timeSuffix}`
+// }
+// 组件props
+const fieldProps = computed(() => {
+    const item = props.item
+    const base = item?.props || {}
+
+    let extra = {}
+    if (item.attrFunc) {
+        extra = item.attrFunc(formData, base) || {}
+    }
+
+    // ❗返回新对象，不污染原数据
+    return {
+        ...base,
+        ...extra
+    }
+})
 // 当前内容组件
 const component = computed(() => {
     const comp = props.item.component
@@ -37,87 +95,80 @@ const component = computed(() => {
         return comp
     }
 
-    // 是字符串 key，尝试从 slotMap 查找组件
-    if (typeof comp === 'string' && formSlotMap.value.has(comp)) {
+    // 是字符串 key，尝试从 formSlotStore 查找组件
+    if (typeof comp === 'string' && formSlotStore.value?.has(comp)) {
         isSlot.value = true
-        return formSlotMap.value.get(comp)
+        return formSlotStore.value.get(comp)
     }
 
     return null
 })
 // 表单组件事件
-const onEvent = (val) => {
-    props.item.command(val, props.item, formData)
-}
+const onEvent = (val) => props.item.command(val, props.item, formData)
 // 组件更新
 const update = (val) => {
-    formData[props.item.field] = val
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+        Object.keys(val).forEach(key => {
+            formData[key] = val[key]
+            emit('update', { field: key, value: val[key] })
+        })
+    } else {
+        formData[field] = val
+        emit('update', { field: field, value: val })
+    }
     onEvent(val)
 }
 </script>
 
 <template>
+    <!--此组件未完成，还需封装一下-->
     <div class="flex flex-col gap-1">
-        <label :for="field" v-if="!disabledLabel">{{ fieldAttr.label }}</label>
-        <!-- ✅ 有 template：渲染动态组件, 此处判断是插槽还是组件  决定使用v-bind试试props -->
-        <component v-if="component" :is="component" @update="(val) => update(val)"
-            v-bind="isSlot ? { data: formData, fieldAttr: fieldAttr } : formData" />
-
+        <label :for="field" v-if="!disabledLabel">{{ fieldProps.label }}</label>
+        <!-- ✅ 此处的:name="fieldProps.name"不能删除，会导致自定义组件的验证规则失效props-->
+        <FormField v-if="fieldType === FormEnum.COMPONENT" as="section" v-slot="$field" :name="fieldProps.name"
+            :initialValue="model">
+            <component v-if="component" :is="component" @update="(val) => update(val)"
+                v-bind="isSlot ? { data: formData, props: fieldProps } : formData" />
+        </FormField>
         <!--数字输入框-->
-        <InputNumber v-if="fieldType === FormEnum.INPUT_NUMBER" v-model="formData[field]" :name="field"
-            v-bind="fieldAttr" />
-
+        <InputNumber v-if="fieldType === FormEnum.INPUT_NUMBER" v-model="model" v-bind="fieldProps" />
         <!--文本输入框-->
-        <InputText v-if="fieldType === FormEnum.INPUT_TEXT" v-model="formData[field]" :name="field"
-            v-bind="fieldAttr" />
-
+        <InputText v-if="fieldType === FormEnum.INPUT_TEXT" v-model="model" v-bind="fieldProps" />
+        <!--密码框-->
+        <Password v-if="fieldType === FormEnum.PASSWORD" v-model="model" v-bind="fieldProps" />
         <!--富文本-->
-        <Textarea v-if="fieldType === FormEnum.INPUT_TEXTAREA" v-model="formData[field]" :name="field"
-            v-bind="fieldAttr" />
-
+        <Textarea v-if="fieldType === FormEnum.INPUT_TEXTAREA" v-model="model" v-bind="fieldProps" />
         <!--日历-->
-        <DatePicker v-if="fieldType === FormEnum.DATE_PICKER" v-model="formData[field]" :name="field"
-            dateFormat="yy-mm-dd" showTime hourFormat="24" v-bind="fieldAttr" />
-
+        <DatePicker v-if="fieldType === FormEnum.DATE_PICKER" v-model="model" v-bind="fieldProps" />
         <!--单选-->
-        <RadioButtonGroup v-if="fieldType === FormEnum.RADIO_BUTTON" v-model="formData[field]" :name="field"
-            class="flex flex-wrap gap-4" v-bind="fieldAttr">
-            <div v-if="fieldAttr.options" v-for="(option, o) in fieldAttr.options" class="flex items-center gap-2">
-                <RadioButton :inputId="option.value" :value="option.value" />
-                <label :for="option.value">{{ option.label }}</label>
+        <RadioButtonGroup v-if="fieldType === FormEnum.RADIO_BUTTON" v-model="model" class="flex flex-wrap gap-4"
+            v-bind="fieldProps">
+            <div v-if="fieldProps.options" v-for="(option, o) in fieldProps.options" class="flex items-center gap-2">
+                <RadioButton :inputId="field + String(option.value)" :value="option.value" />
+                <label :for="field + String(option.value)">{{ option.label }}</label>
             </div>
         </RadioButtonGroup>
-
         <!--多选-->
-        <CheckboxGroup v-if="fieldType === FormEnum.CHECKBOX" v-model="formData[field]" :name="field"
-            class="flex flex-wrap gap-4" v-bind="fieldAttr">
-            <div v-if="fieldAttr.options" v-for="(option, o) in fieldAttr.options" class="flex items-center gap-2">
-                <Checkbox :inputId="option.value" :value="option.value" />
-                <label :for="option.value">{{ option.label }}</label>
+        <CheckboxGroup v-if="fieldType === FormEnum.CHECKBOX" v-model="model" class="flex flex-wrap gap-4"
+            v-bind="fieldProps">
+            <div v-if="fieldProps.options" v-for="(option, o) in fieldProps.options" class="flex items-center gap-2">
+                <Checkbox :inputId="field + String(option.value)" :value="option.value" />
+                <label :for="field + String(option.value)">{{ option.label }}</label>
             </div>
         </CheckboxGroup>
-
         <!--切换按钮-->
         <div v-if="fieldType === FormEnum.TOGGLE_BUTTON" class="flex flex-wrap gap-4">
-            <ToggleSwitch :name="field" v-model="formData[field]" v-bind="fieldAttr" />
+            <ToggleSwitch v-model="model" v-bind="fieldProps" />
             <label :for="field" style="margin-top: 3px;">
-                {{ fieldAttr.placeholder }}
+                {{ fieldProps.placeholder }}
             </label>
         </div>
-
         <!--下拉单选-->
-        <Select v-if="fieldType === FormEnum.SELECT" v-model="formData[field]" :name="field"
-            :options="fieldAttr.options" option-label="label" option-value="value" v-bind="fieldAttr" />
-
+        <Select v-if="fieldType === FormEnum.SELECT" v-model="model" v-bind="fieldProps" />
         <!--下拉多选-->
-        <MultiSelect v-if="fieldType === FormEnum.MULTI_SELECT" v-model="formData[field]" :name="field"
-            :options="fieldAttr.options" option-label="label" option-value="value" filter :maxSelectedLabels="3"
-            v-bind="fieldAttr" />
-
+        <MultiSelect v-if="fieldType === FormEnum.MULTI_SELECT" v-model="model" v-bind="fieldProps" />
         <!--树形单选-->
-        <TreeSelect v-if="fieldType === FormEnum.TREE_SELECT" v-model="formData[field]" :name="field"
-            selection-mode="single" :options="fieldAttr.options" class="w-full" v-bind="fieldAttr" />
-
+        <TreeSelect v-if="fieldType === FormEnum.TREE_SELECT" v-model="model" v-bind="fieldProps" />
         <!--触发规则信息-->
         <Message v-if="invalid" severity="error" size="small" variant="simple" class="mt-1 mf-1">
             {{ message }}

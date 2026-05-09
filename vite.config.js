@@ -30,6 +30,7 @@ export default defineConfig({
           'primeicons': 'PrimeIcons'
         }
       }
-    }
+    },
+    cssCodeSplit: true
   }
 })

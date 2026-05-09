@@ -1,76 +1,69 @@
-import { reactive, readonly, ref } from 'vue'
+import { provide, ref } from 'vue'
 
-export function useTableBar(keyMap) {
-    // 列表工具栏
-    const _tablebar_actions = ref([])
-    const tablebar = reactive({
-        title: '工具栏',
-        width: 'auto',
-        align: 'center',
-        position: 'right',// 另外一个 left
-        actions: readonly(_tablebar_actions.value),
-        style: {},
-        register: (label, callback) => {
-            let id = `action_${Date.now()}_${_tablebar_actions.value.length}`
-            let perKey = keyMap.get(id)
-            const obj = { id, perKey, label, icon: '', type: 'primary', _command: () => { }, _hideFunc: () => true }
-            _tablebar_actions.value.push(obj)
-
-            const api = {
-                enabledPer(id) {
-                    obj.id = id
-                    obj.perKey = keyMap.get(id)
-                    return api
-                },
-                setAttr(attrs = {}) {
-                    if ('icon' in attrs) obj.icon = attrs.icon
-                    if ('type' in attrs) obj.type = attrs.type
-                    return api
-                },
-                hide(fn) { obj._hideFunc = fn; return api },
-                on(fn) { obj._command = fn; return api }
-            }
-
-            if (typeof callback === 'function') {
-                callback(api)
-                return api
-            }
-
-            return {
-                ...obj,
-                ...api
-            }
-        },
-        setAttr(attrs = {}) {
-            if ('title' in attrs) obj.title = attrs.title
-            if ('width' in attrs) obj.width = attrs.width
-            if ('align' in attrs) obj.align = attrs.align
-            if ('position' in attrs) obj.position = attrs.position
-            return api
-        },
-        setTitle: (title) => { tablebar.title = title },
-        setWidth: (width) => { tablebar.width = width },
-        setAlign: (align) => { tablebar.align = align },
-        setPosition: (position) => { tablebar.position = position },
-        get(id) {
-            id = keyMap.get(id)
-            const action = _tablebar_actions.value.find(a => a.id === id)
-            if (!action) {
-                console.warn(`未找到 tablebar 动作 id = '${id}'`)
-                return {
-                    on: () => { } // 空方法防止报错
-                }
-            }
-            return {
-                ...action,
-                hide(fn) { action._hideFunc = fn; return this },
-                on(fn) {
-                    action._command = fn
-                    return this
-                }
+export function useTableBar() {
+    const keyRef = ref(null)
+    const items = ref([])
+    const props = ref({
+        header: '工具栏',
+        style: { width: 'auto' },
+        align: 'center'
+    })
+    const setAttr = (attrs = {}) => props.value = { ...props.value, ...attrs }
+    const setTitle = (title) => props.value.header = title
+    const setWidth = (width) => props.value.style = { ...props.value.style, width }
+    const setStyle = (style) => props.value.style = { ...props.value.style, ...style }
+    const enabledForzen = () => setAttr({ frozen: true })
+    const registerKey = (keyObj) => keyRef.value = keyObj
+    const register = (label, callback) => {
+        let id = `action_${Date.now()}_${items.value.length}`
+        let perKey = keyRef.value.get(id)
+        let item = {
+            id,
+            perKey,
+            _command: () => { },
+            _hideFunc: () => true,
+            props: {
+                label,
+                icon: '',
+                severity: 'primary',
+                variant: 'text'
             }
         }
-    })
 
-    return tablebar
+        const on = (func) => {
+            item._command = func
+            return api
+        }
+        const hide = (func) => {
+            item._hideFunc = func
+            return api
+        }
+        const enabledPer = (id) => {
+            item.perKey = keyRef.value.get(id)
+            return api
+        }
+        const setAttr = (attrs = {}) => {
+            if (typeof attrs !== 'object') return this
+            // 兼容下传入type时的情况
+            if (attrs.type) attrs.severity = attrs.type
+            item.props = { ...item.props, ...attrs }
+            return api
+        }
+
+        const api = { enabledPer, setAttr, hide, on }
+
+        if (typeof callback === 'function') {
+            callback(api)
+            return api
+        }
+
+        items.value.push(item)
+        return api
+    }
+
+    provide('tableBar', { props, items })
+    return {
+        register, setAttr, setTitle, setWidth,
+        setStyle, enabledForzen, registerKey
+    }
 }

@@ -1,18 +1,5 @@
 import { FormEnum } from '../enum/FormEnum'
-import { readonly, markRaw, ref, inject, provide } from 'vue'
-
-/**
- * 注册 provide，用于表单项插槽映射
- */
-const _registerProvide = () => {
-  // 获取已有 map（若无则创建）
-  let slotMapRef = inject('formSlotMap', null)
-
-  if (!slotMapRef) {
-    slotMapRef = ref(new Map())
-    provide('formSlotMap', slotMapRef)
-  }
-}
+import { markRaw, reactive, ref } from 'vue'
 
 /**
  * 表单行 API
@@ -20,74 +7,105 @@ const _registerProvide = () => {
  * @returns 
  */
 const useRowApi = (newRow) => {
-  const rowApi = {
-    setColumn(field, callback, label = '') {
-      const column = {
-        field,
-        fieldType: FormEnum.INPUT_TEXT,
-        fieldAttr: {
-          label: label || field,
-          placeholder: `请输入${label}`,
-          require: false,
-          options: []
-        },
-        rules: (schema) => schema, // 是一个方法
-        disabledLabel: false,
-        hideFunc: () => true,
-        attrFunc: null,
-        command: () => { }
-      }
+    const setColumn = (field, callback, label = '') => {
+        const column = {
+            field,
+            fieldType: FormEnum.INPUT_TEXT,
+            require: false,
+            disabledLabel: false,
+            props: {
+                name: field,
+                label: label || field,
+                placeholder: `请输入${label}`,
+                options: []
+            },
+            rules: (schema) => schema, // 是一个方法
+            hideFunc: () => true,
+            attrFunc: null,
+            command: () => { }
+        }
 
-      newRow.push(column)
+        const disabledLabel = () => {
+            column.disabledLabel = true
+            return columnApi
+        }
+        const setRule = (rules) => {
+            column.rules = rules
+            return columnApi
+        }
+        const setLabel = (label) => {
+            column.props.label = label
+            column.props.placeholder = `请输入${label}`
+            return columnApi
+        }
+        const setOptions = (options, type = FormEnum.SELECT) => {
+            setType(type)
+            column.props.options = options
+            return columnApi
+        }
+        const setType = (type) => {
+            column.fieldType = type
+            switch (type) {
+                case FormEnum.TREE_SELECT:
+                    column.props.selectionMode = 'single'
+                    column.props.class = 'w-full'
+                    break
+                case FormEnum.SELECT:
+                case FormEnum.MULTI_SELECT:
+                    column.props.optionValue = 'value'
+                    column.props.optionLabel = 'label'
+                    column.props.options = []
+                    if (type === FormEnum.MULTI_SELECT) {
+                        column.props.maxSelectedLabels = 3
+                    }
+                    break
+                case FormEnum.DATE_PICKER:
+                    column.props.selectionMode = 'single'
+                    column.props.updateModelType = 'string'
+                    column.props.showTime = true
+                    column.props.hourFormat = '24'
+                    column.props.dateFormat = 'yy-mm-dd'
+                    break
+                case FormEnum.INPUT_TEXTAREA:
+                    column.props.rows = 5
+                    break
+                default:
+                    break
+            }
+            return columnApi
+        }
+        const setPlaceholder = (text) => { column.props.placeholder = text; return columnApi }
+        const onRequire = () => { column.require = true; return columnApi }
+        const setAttr = (attrs = {}) => {
+            if (typeof attrs !== 'object') return columnApi
+            column.props = { ...column.props, ...attrs }
+            return columnApi
+        }
+        const setComponent = (comp) => {
+            if (comp) {
+                column.fieldType = FormEnum.COMPONENT
+                column.component = markRaw(comp)
+            }
+            return columnApi
+        }
+        const hide = (fn) => { column.hideFunc = fn; return columnApi }
+        const on = (fn) => { column.command = fn; return columnApi }
+        const change = (fn) => { column.attrFunc = fn; return columnApi }
 
-      const columnApi = {
-        disabledLabel() {
-          column.disabledLabel = true
-          return columnApi
-        },
-        setRule(rules) {
-          column.rules = rules
-          return columnApi
-        },
-        setLabel(label) {
-          column.fieldAttr.label = label
-          column.fieldAttr.placeholder = `请输入${label}`
-          return columnApi
-        },
-        setOptions(options) {
-          column.fieldType = FormEnum.SELECT
-          column.fieldAttr.options = options
-          return columnApi
-        },
-        setType(type) { column.fieldType = type; return columnApi },
-        setPlaceholder(text) { column.fieldAttr.placeholder = text; return columnApi },
-        onRequire() { column.fieldAttr.require = true; return columnApi },
-        setAttr(attrs = {}) {
-          if (typeof attrs !== 'object') return columnApi
-          Object.assign(column.fieldAttr, attrs)
-          return columnApi
-        },
-        setComponent(comp) {
-          if (comp) {
-            column.component = markRaw(comp)
-          }
-          return columnApi
-        },
-        hide(fn) { column.hideFunc = fn; return columnApi },
-        on(fn) { column.command = fn; return columnApi },
-        change(fn) { column.attrFunc = fn; return columnApi },
-        setColumn: rowApi.setColumn
-      }
+        const columnApi = {
+            disabledLabel, setRule, setLabel, setOptions, setType, setPlaceholder,
+            onRequire, setAttr, setComponent, hide, on, change, setColumn
+        }
 
-      if (typeof callback === 'function') {
-        callback(columnApi)
-        return rowApi
-      }
+        if (typeof callback === 'function') {
+            callback(columnApi)
+        }
 
-      return columnApi
+        newRow.push(column)
+        return { setColumn }
     }
-  }
-  return rowApi
+
+    return { setColumn }
 }
 
 /**
@@ -95,38 +113,21 @@ const useRowApi = (newRow) => {
  * @returns 
  */
 export function useForm() {
-  _registerProvide()
+    const register = () => {
+        let data = reactive({})
+        let config = ref([])
 
-  const _forms = ref([])
-  const form = {
-    list: readonly(_forms.value),
-    get: (id) => _forms.value.find(f => f.id === id),
-    register(id = '') {
-      id = id || `form_${Date.now()}_${_forms.value.length}`
-      const existing = form.get(id)
-      if (existing) {
-        console.warn(`Form with id "${id}" already exists. Returning the existing form.`)
-      }
-
-      const obj = {
-        id,
-        data: {},
-        config: [],
-        setRow() {
-          const newRow = []
-          this.config.push(newRow)
-          return useRowApi(newRow)
-        },
-        setData(formData) {
-          obj.data = formData
-          return this
+        const setRow = () => {
+            let newRow = []
+            config.value.push(newRow)
+            return useRowApi(newRow)
         }
-      }
 
-      _forms.value.push(obj)
-      return obj
+        const setData = (formData) => {
+            data = Object.assign(data, formData) // ✅ 不换引用
+        }
+        return { setRow, setData, data, config }
     }
-  }
 
-  return form
+    return { register }
 }

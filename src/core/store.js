@@ -1,6 +1,7 @@
 import CryptoJS from 'crypto-js'
 
 let dataCache = null
+let enabledSession = false
 
 const STORAGE_KEY = '__store__'
 const SECRET_KEY = '__store_secret__'
@@ -13,17 +14,17 @@ const SECRET_KEY = '__store_secret__'
 
 function encryptData(data) {
   const SECRET = CryptoJS.lib.WordArray.random(32).toString()
-  localStorage.setItem(SECRET_KEY, SECRET)
+  enabledSession ? sessionStorage.setItem(SECRET_KEY, SECRET) : localStorage.setItem(SECRET_KEY, SECRET)
 
   const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), SECRET).toString()
-  localStorage.setItem(STORAGE_KEY, encrypted)
+  enabledSession ? sessionStorage.setItem(STORAGE_KEY, encrypted) : localStorage.setItem(STORAGE_KEY, encrypted)
 
   dataCache = data
 }
 
 function decryptData() {
-  const encrypted = localStorage.getItem(STORAGE_KEY)
-  const SECRET = localStorage.getItem(SECRET_KEY)
+  const encrypted = enabledSession ? sessionStorage.getItem(STORAGE_KEY) : localStorage.getItem(STORAGE_KEY)
+  const SECRET = enabledSession ? sessionStorage.getItem(SECRET_KEY) : localStorage.getItem(SECRET_KEY)
 
   if (!encrypted || !SECRET) return null
 
@@ -107,6 +108,18 @@ const store = {
 
     data.perEnabled = false
     encryptData(data)
+  },
+  /**
+   * 清除缓存数据
+   */
+  clear() {
+    if (!enabledSession) {
+      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(SECRET_KEY)
+    }
+  },
+  enabledSession() {
+    enabledSession = true
   }
 }
 

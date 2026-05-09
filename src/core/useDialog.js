@@ -1,116 +1,127 @@
-import { reactive, markRaw, ref, inject, provide } from 'vue'
+import { markRaw, ref } from 'vue'
+import { dialogStore } from '../store'
 
 export function useDialog() {
-    const _dialogs = ref([])
-    const dialog = reactive({
-        instance: null,
-        registerProvide(id, comp) {
-            if (typeof id !== 'string') {
-                console.warn(`[dialog] registerProvide: key 必须为 string，收到:`, id)
-                return this
-            }
+    const _dialogs = dialogStore.list
 
-            // 获取已有 map（若无则创建）
-            let slotMapRef = inject('dialogSlotMap', null)
-            if (!slotMapRef) {
-                slotMapRef = ref(new Map())
-                provide('dialogSlotMap', slotMapRef)
-            }
-
-            slotMapRef.value.set(id, markRaw(comp))
-            return this
-        },
+    return {
         register(title) {
-            const id = `${Date.now()}-${Math.random()}`
-            const data = reactive({
-                id,
+            const actions = ref([])
+            const props = ref({
+                header: '',
                 visible: false,
-                loading: false,
-                attrs: {
-                    header: title || '',
-                    draggable: true,
-                    modal: true,
-                    maximizable: true,
-                    style: { width: '65rem' }
-                },
-                component: null,
-                propsData: {},
-                formData: null,
-                withCancel: true,
-                _actions: [],
-                get actions() {
-                    if (!this.withCancel) return this._actions
-                    return [
-                        ...this._actions,
-                        {
-                            label: '取消',
-                            icon: '',
-                            type: 'secondary',
-                            loading: false,
-                            command: () => { this.visible = false }
-                        }
-                    ]
-                }
+                maximizable: false,
+                draggable: true,
+                modal: true,
+                style: { width: '65rem' }
             })
 
-            const get = () => data
+            const attributes = ref({
+                id: '',
+                loading: true,
+                disabledCancelButton: false,
+                disabledCancelButtonIcon: false,
+                component: null,
+                propsData: {},
+                formData: null
+            })
+
             const disabledCancel = () => {
-                data.withCancel = false
+                attributes.value.disabledCancelButton = true
+                return method
+            }
+
+            const disabledCancelIcon = () => {
+                attributes.value.disabledCancelButtonIcon = true
+                return method
+            }
+            const enabledMaximizable = () => {
+                props.value.maximizable = true
                 return method
             }
             const setTitle = (title) => {
-                data.attrs.header = title
+                props.value.header = title
                 return method
             }
             const setAttr = (attrs = {}) => {
-                if (typeof attrs !== 'object') return this
-                Object.assign(data.attrs, attrs)
+                if (typeof attrs !== 'object') return data
+                props.value = { ...props.value, ...attrs }
                 return method
             }
-            const setBtn = (label = '', command = () => { }, type = 'info', icon = '') => {
-                const index = data._actions.findIndex(a => a.label === label)
-                if (index > -1) {
-                    data._actions[index] = { label, icon, type, loading: false, command }
-                } else {
-                    data._actions.push({ label, icon, type, loading: false, command })
+            const setWidth = (width) => {
+                props.value.style = { ...props.value.style, width }
+                return method
+            }
+            const setStyle = (style) => {
+                props.value.style = { ...props.value.style, ...style }
+                return method
+            }
+            const setContentStyle = (style) => {
+                props.value.contentStyle = { ...props.value, ...style }
+                return method
+            }
+            const setBtn = (callback) => {
+                const btn = {
+                    label: '',
+                    icon: '',
+                    type: '',
+                    loading: false,
+                    command: () => { }
+                }
+
+                const btnApi = {
+                    setLabel(l) {
+                        btn.label = l
+                        return btnApi
+                    },
+                    setIcon(i) {
+                        btn.icon = i
+                        return btnApi
+                    },
+                    setType(t) {
+                        btn.type = t
+                        return btnApi
+                    },
+                    on(fn) {
+                        btn.command = fn
+                        return btnApi
+                    }
+                }
+
+                if (typeof callback === 'function') {
+                    callback(btnApi)
+                    actions.value.push(btn)
                 }
                 return method
             }
             const setComponent = (comp, propsData) => {
                 if (comp) {
-                    data.component = markRaw(comp)
+                    attributes.value.component = markRaw(comp)
                 }
 
                 if (!propsData) return method
-                data.propsData = propsData
+                attributes.value.propsData = propsData
                 return method
             }
             const setForm = (propsData) => setComponent('form', propsData)
             const setFormData = (propsData) => {
-                data.formData = propsData
+                attributes.value.formData = propsData
                 return method
             }
+
+            const get = () => ({ attributes, props, actions })
             const show = () => {
-                data.visible = true
-                data.loading = true
-                dialog.instance = {
+                attributes.value.id = `action_${Date.now()}_${_dialogs.length}`
+                props.value.visible = true
+                attributes.value.loading = true
+                _dialogs.push({
                     get, destroy, hide
-                }
+                })
             }
-            const hide = () => data.visible = false
+            const hide = () => props.value.visible = false
             const destroy = () => {
-                if (!dialog.instance) return
-                // 关闭时重置数据
-                if (data.propsData) {
-                    if (data.component === 'form') {
-                        data.formData = null
-                        data.propsData.data = null
-                    }
-                    else Object.keys(data.propsData).forEach(k => data.propsData[k] = undefined)
-                }
-                // 关闭弹窗
-                data.visible = false
-                data.loading = false
+                const index = _dialogs.findIndex(d => d.get().attributes.value.id === attributes.value.id)
+                if (index !== -1) _dialogs.splice(index, 1)
             }
 
             const method = {
@@ -119,16 +130,21 @@ export function useDialog() {
                 destroy,
                 setTitle,
                 setAttr,
+                setWidth,
+                setStyle,
                 setBtn,
                 setComponent,
                 setForm,
                 setFormData,
-                disabledCancel
+                setContentStyle,
+                disabledCancel,
+                disabledCancelIcon,
+                enabledMaximizable
             }
-            _dialogs.value.push(data)
+
+            attributes.value.id = `${Date.now()}-${Math.random()}`
+            props.value.header = title
             return method
         }
-    })
-
-    return dialog
+    }
 }

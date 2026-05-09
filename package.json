@@ -1,21 +1,29 @@
 {
   "name": "@layoutkit/prime-vue-layoutkit",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "main": "dist/prime-vue-layoutkit.cjs.js",
   "module": "dist/prime-vue-layoutkit.es.js",
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/prime-vue-layoutkit.es.js",
       "require": "./dist/prime-vue-layoutkit.cjs.js"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
   "files": [
     "dist"
   ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "build:css": "tailwindcss -i ./src/assets/style.css -o ./dist/style.css --minify",
+    "build": "vite build && npm run build:css",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
@@ -26,6 +34,7 @@
   },
   "devDependencies": {
     "@primevue/auto-import-resolver": "^4.5.4",
+    "@tailwindcss/cli": "^4.1.18",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vitejs/plugin-vue-jsx": "^5.0.0",
     "sass": "^1.63.0",
@@ -35,6 +44,7 @@
   "dependencies": {
     "@primevue/forms": "^4.5.4",
     "crypto-js": "^4.2.0",
+    "tailwindcss": "^4.1.18",
     "tailwindcss-primeui": "^0.6.1",
     "zod": "^4.3.6"
   }

@@ -1,56 +1,52 @@
-import { reactive, readonly, ref } from 'vue'
+import { ref, provide } from 'vue'
 
-export function useToolBar(keyMap) {
-    const _toolbar_actions = ref([])
-    const toolbar = reactive({
-        actions: readonly(_toolbar_actions.value),
-        register: (label, callback) => {
-            let id = `action_${Date.now()}_${_toolbar_actions.value.length}`
-            let perKey = keyMap.get(id)
-            const obj = { id, perKey, label, icon: '', type: 'primary', _command: () => { } }
-            _toolbar_actions.value.push(obj)
-
-            const api = {
-                enabledPer(id) {
-                    obj.id = id
-                    obj.perKey = keyMap.get(id)
-                    return api
-                },
-                setAttr(attrs = {}) {
-                    if ('icon' in attrs) obj.icon = attrs.icon
-                    if ('type' in attrs) obj.type = attrs.type
-                    return api
-                },
-                on(fn) { obj._command = fn; return api }
-            }
-
-            if (typeof callback === 'function') {
-                callback(api)
-                return api
-            }
-
-            return {
-                ...obj,
-                ...api
-            }
-        },
-        get(id) {
-            const action = _toolbar_actions.value.find(a => a.id === id)
-            if (!action) {
-                console.warn(`未找到 toolbar 动作 id = '${id}'`)
-                return {
-                    on: () => { } // 空方法防止报错
-                }
-            }
-            return {
-                ...action,
-                on(fn) {
-                    action._command = fn
-                    return this
-                }
+export function useToolBar() {
+    const keyRef = ref(null)
+    const items = ref([])
+    const registerKey = (keyObj) => keyRef.value = keyObj
+    const register = (label, callback) => {
+        let id = `action_${Date.now()}_${items.value.length}`
+        let perKey = keyRef.value.get(id)
+        let item = {
+            id,
+            perKey,
+            _command: () => { },
+            props: {
+                label,
+                icon: '',
+                severity: 'primary',
+                variant: 'outlined',
+                loading: false
             }
         }
-    })
 
-    return toolbar
+        const on = (func) => {
+            item._command = func
+            return api
+        }
+        const enabledPer = (id) => {
+            item.perKey = keyRef.value.get(id)
+            return api
+        }
+        const setAttr = (attrs = {}) => {
+            if (typeof attrs !== 'object') return this
+            // 兼容下传入type时的情况
+            if (attrs.type) attrs.severity = attrs.type
+            item.props = { ...item.props, ...attrs }
+            return api
+        }
+
+        const api = { enabledPer, setAttr, on }
+
+        if (typeof callback === 'function') {
+            callback(api)
+            return api
+        }
+
+        items.value.push(item)
+        return api
+    }
+
+    provide('toolBar', { items })
+    return { register, registerKey }
 }

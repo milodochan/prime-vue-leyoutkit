@@ -1,5 +1,6 @@
 <script setup>
-import { inject, markRaw, onBeforeUnmount, onMounted, useSlots, defineEmits } from 'vue'
+import { markRaw, onBeforeUnmount, onMounted, useSlots, defineEmits } from 'vue'
+import { formSlotStore } from '../store'
 
 const props = defineProps({
     name: {
@@ -8,15 +9,13 @@ const props = defineProps({
     }
 })
 
-const slotMap = inject('formSlotMap')
 const slots = useSlots()
-
 const emit = defineEmits(['update'])
 
 onMounted(() => {
     const slotRender = slots.default
     // 保存一个真正的函数式组件
-    slotMap.value.set(
+    formSlotStore.value.set(
         props.name,
         markRaw({
             // 这里返回的是函数式组件对象
@@ -24,9 +23,8 @@ onMounted(() => {
                 // console.log(attrs)
                 // console.log(emit)
                 return () => slotRender?.({
-                    props: props,   // 外部传入的数据都在 attrs
+                    props: { ...props, ...attrs.props },   // 外部传入的数据都在 attrs
                     data: attrs.data,
-                    fieldArr: attrs.fieldArr,
                     emit
                 })
             },
@@ -36,7 +34,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-    slotMap.value.delete(props.name)
+    formSlotStore.value.delete(props.name)
 })
 
 </script>
