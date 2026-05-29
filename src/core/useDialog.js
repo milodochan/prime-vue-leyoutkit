@@ -23,7 +23,8 @@ export function useDialog() {
                 disabledCancelButtonIcon: false,
                 component: null,
                 propsData: {},
-                formData: null
+                formData: null,
+                closeFunc: (val) => { }
             })
 
             const disabledCancel = () => {
@@ -123,7 +124,6 @@ export function useDialog() {
                 const index = _dialogs.findIndex(d => d.get().attributes.value.id === attributes.value.id)
                 if (index !== -1) _dialogs.splice(index, 1)
             }
-
             const method = {
                 show,
                 hide,

@@ -20,6 +20,7 @@ export function useTableBar() {
         let item = {
             id,
             perKey,
+            ignorePer: false,
             _command: () => { },
             _hideFunc: () => true,
             props: {
@@ -42,6 +43,10 @@ export function useTableBar() {
             item.perKey = keyRef.value.get(id)
             return api
         }
+        const ignorePer = () => {
+            item.ignorePer = true
+            return api
+        }
         const setAttr = (attrs = {}) => {
             if (typeof attrs !== 'object') return this
             // 兼容下传入type时的情况
@@ -50,7 +55,7 @@ export function useTableBar() {
             return api
         }
 
-        const api = { enabledPer, setAttr, hide, on }
+        const api = { enabledPer, ignorePer, setAttr, hide, on }
 
         if (typeof callback === 'function') {
             callback(api)

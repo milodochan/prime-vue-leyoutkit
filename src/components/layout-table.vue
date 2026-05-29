@@ -23,12 +23,8 @@ const props = computed(() => table.props.value ?? {})
 const columns = computed(() => table.columns.value ?? [])
 const tableBarItems = computed(() => tableBar.items.value ?? [])
 const tableBarProps = computed(() => tableBar.props.value ?? [])
-const tableBarVisible = computed(() => tableBarItems.value.some(action => store.hasPer(action.perKey)))
-const paginationProps = computed(() => {
-    let dd = table.paginationProps.value ?? {}
-    console.log(dd)
-    return dd
-})
+const tableBarVisible = computed(() => tableBarItems.value.some(action => action.ignorePer || store.hasPer(action.perKey)))
+const paginationProps = computed(() => table.paginationProps.value ?? {})
 
 const onPageChange = (event) => {
     if (table.pagination.value.size === event.rows) {

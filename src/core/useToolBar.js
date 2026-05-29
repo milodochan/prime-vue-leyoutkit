@@ -10,6 +10,7 @@ export function useToolBar() {
         let item = {
             id,
             perKey,
+            ignorePer: false,
             _command: () => { },
             props: {
                 label,
@@ -28,6 +29,10 @@ export function useToolBar() {
             item.perKey = keyRef.value.get(id)
             return api
         }
+        const ignorePer = () => {
+            item.ignorePer = true
+            return api
+        }
         const setAttr = (attrs = {}) => {
             if (typeof attrs !== 'object') return this
             // 兼容下传入type时的情况
@@ -36,7 +41,7 @@ export function useToolBar() {
             return api
         }
 
-        const api = { enabledPer, setAttr, on }
+        const api = { enabledPer, ignorePer, setAttr, on }
 
         if (typeof callback === 'function') {
             callback(api)

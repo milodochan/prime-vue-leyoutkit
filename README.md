@@ -210,8 +210,9 @@ filter.register('name', '姓名')
 
 | 方法                               | 说明                     |
 | -------------------------------- | ---------------------- |
-| `enabledPer(id: string)`     | 设置工具中按钮是否使用权限控制       |
-| `setAttr(attrs: object)`     | 设置工具中按钮的属性       |
+| `enabledPer(id: string)`     | 设置工具栏中按钮是否使用权限控制       |
+| `ignorePer()`                | 设置工具栏中按钮是否忽略权限控制       |
+| `setAttr(attrs: object)`     | 设置工具栏中按钮的属性       |
 | `on(val: func)`              | 事件函数         |
 
 
@@ -247,6 +248,7 @@ toolbar.register('新增')
 | 方法                               | 说明                     |
 | -------------------------------- | ---------------------- |
 | `enabledPer(id: string)`     | 设置工具栏中按钮是否使用权限控制       |
+| `ignorePer()`                | 设置工具栏中按钮是否忽略权限控制       |
 | `setAttr(attrs: object)`     | 设置工具栏中按钮的属性       |
 | `hide(val: func)`            | 隐藏事件函数         |
 | `on(val: func)`              | 事件函数         |
@@ -512,7 +514,10 @@ FilterOperatorEnum = {
         </FormItemSlot>
         <!--Dialog 显示内容示例-->
         <DialogContentSlot name="name3">
-            <span>测试</span>
+            <template #default="{ data }">
+              <span>测试</span>
+              <span>{{data.content}}</span>
+            </template>
         </DialogContentSlot>
     </div>
 </template>
@@ -568,7 +573,7 @@ FilterOperatorEnum = {
 
   // 工具栏, 测试dialog内容插槽
   toolbar.register('测试dialog内容插槽').on(async () => {
-      dialog.register('测试dialog内容插槽').setComponent('name3').show()
+      dialog.register('测试dialog内容插槽').setComponent('name3', { content: '测试内容' }).show()
   })
 
   // table工具栏

@@ -91,10 +91,13 @@ export function useFilter() {
                     break
                 case FilterEnum.DATE:
                 case FilterEnum.DATE_RANGE:
+                    item.props.selectionMode = type === FilterEnum.DATE_RANGE ? 'range' : 'single'
+                    item.props.updateModelType = 'string'
+                    item.props.showTime = true
+                    item.props.hourFormat = '24'
                     item.props.inputClass = 'w-full'
                     item.props.dateFormat = "yy-mm-dd"
                     if (type === FilterEnum.DATE_RANGE) {
-                        item.props.selectionMode = "range"
                         item.props.manualInput = false
                     }
                     break

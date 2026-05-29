@@ -11,14 +11,23 @@ const props = defineProps({
 
 const slots = useSlots()
 
-onMounted(() => {
+onMounted(async () => {
+    // 保存一个真正的函数式组件
+    const slotRender = slots.default
     dialogSlotStore.value.set(
         props.name,
         markRaw({
-            render: () => slots.default?.()
+            // 这里返回的是函数式组件对象
+            setup(props, { attrs }) {
+                return () => slotRender?.({
+                    props: { ...props, ...attrs.props },   // 外部传入的数据都在 attrs
+                    data: attrs
+                })
+            }
         })
     )
 })
+
 onBeforeUnmount(() => {
     dialogSlotStore.value.delete(props.name)
 })
