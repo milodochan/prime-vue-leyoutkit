@@ -20,19 +20,4 @@ export { default as store } from './core/store'
 export { FilterEnum } from './enum/FilterEnum'
 export { FilterOperatorEnum } from './enum/FilterOperatorEnum'
 export { FormEnum } from './enum/FormEnum'
-// 
-// export { registerPrimeVueComponents } from './primevueRegister'
-import PrimeVue from 'primevue/config'
-import ToastService from 'primevue/toastservice'
-import ConfirmationService from 'primevue/confirmationservice'
-import DialogService from 'primevue/dialogservice'
-import './assets/style.css' // 引入组件库样式
-
-export default {
-    install(app, options = {}) {
-        app.use(PrimeVue, options)
-        app.use(ToastService)
-        app.use(ConfirmationService)
-        app.use(DialogService)
-    }
-}
+export { default as LayoutKit } from './primevue-install'

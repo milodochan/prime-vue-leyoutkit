@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
-import path from 'path'
+import path from 'node:path'
 import Components from 'unplugin-vue-components/vite'
 import { PrimeVueResolver } from '@primevue/auto-import-resolver'
 
@@ -19,15 +19,24 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/index.js'),
       name: 'PrimeVueLayoutKit',
-      fileName: (format) => `prime-vue-layoutkit.${format}.js`
+      fileName: (format) => `prime-vue-layoutkit.${format}.js`,
+      formats: ['es', 'cjs']  // 👈 改为 cjs
     },
     rollupOptions: {
-      external: ['vue', 'primevue', 'primeicons'],
+      external: [
+        'vue',
+        'primevue',
+        'primeicons',
+        '@primevue/forms',
+        'crypto-js',
+        'zod'
+      ],
       output: {
+        exports: 'named',
         globals: {
           vue: 'Vue',
-          'primevue': 'PrimeVue',
-          'primeicons': 'PrimeIcons'
+          primevue: 'PrimeVue',
+          primeicons: 'PrimeIcons'
         }
       }
     },

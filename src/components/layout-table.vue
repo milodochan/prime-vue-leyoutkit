@@ -38,8 +38,18 @@ const onPageChange = (event) => {
     table.load()
 }
 
+const columnContent = (content, length) => {
+    if (!length) return content
+    if (!content) return ''
+
+    return `${content.slice(0, length - 1)}${(content.length > length ? '...' : '')}`
+}
+
 onMounted(() => {
-    table.query_params.value = filter.filterFunc()
+    const filterData = filter.filterFunc()
+    if (filterData === null) return
+
+    table.query_params.value = filterData
     table.load()
 })
 </script>
@@ -55,11 +65,12 @@ onMounted(() => {
                     <LayoutTablebar :items="tableBarItems" :data="data" />
                 </template>
             </Column>
-            <Column v-for="(item, i) in columns" v-show="item.visible" v-bind="item.props">
+            <Column v-for="(item, i) in columns" :key="i" v-show="item.visible" v-bind="item.props">
                 <template #body="{ data, index }">
                     <LayoutTableColumnSolt v-if="item.template && item.template !== undefined" :data="data"
                         :template="item.template" :index="index" />
-                    <span v-else v-tooltip.top="String(data[item.props.field])" v-html="data[item.props.field]" />
+                    <span v-else v-tooltip.top="String(data[item.props.field])"
+                        v-html="columnContent(data[item.props.field], item.contentLength)" />
                 </template>
             </Column>
             <Column v-if="tableBarVisible && !attrs.defaultColumnPosition" alignFrozen="right" v-bind="tableBarProps">

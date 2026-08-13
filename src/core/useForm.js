@@ -108,26 +108,96 @@ const useRowApi = (newRow) => {
     return { setColumn }
 }
 
+const deepClone = (obj) => {
+    if (obj === null || typeof obj !== 'object') {
+        return obj
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(item => deepClone(item))
+    }
+
+    const cloned = {}
+
+    for (const key in obj) {
+        const value = obj[key]
+
+        // function 不拷贝引用问题，直接保留
+        if (typeof value === 'function') {
+            cloned[key] = value
+        } else {
+            cloned[key] = deepClone(value)
+        }
+    }
+
+    return cloned
+}
+
+/**
+ * 创建 Form 实例
+ */
+const createForm = (initData = {}, initConfig = []) => {
+    const data = reactive(initData)
+    const config = ref(initConfig)
+
+    const setRow = () => {
+        const newRow = []
+        config.value.push(newRow)
+        return useRowApi(newRow)
+    }
+
+    const setData = (formData) => {
+        Object.assign(data, formData)
+    }
+
+    const updateAttr = (name, attrs = {}) => {
+        if (!name || typeof attrs !== 'object') return
+
+        for (const row of config.value) {
+            const column = row.find(x => x.field === name)
+            if (column) {
+                // props merge
+                if (attrs.props) {
+                    Object.assign(
+                        column.props,
+                        attrs.props
+                    )
+                }
+                // 非 props 属性
+                Object.keys(attrs).forEach(key => {
+                    if (key !== 'props') {
+                        column[key] = attrs[key]
+                    }
+                })
+
+                break
+            }
+        }
+    }
+
+    /**
+     * 克隆整个 form
+     */
+    const clone = () => createForm(
+        deepClone(data),
+        deepClone(config.value)
+    )
+
+    return {
+        setRow,
+        setData,
+        updateAttr,
+        clone,
+        data,
+        config
+    }
+}
+
 /**
  * useForm 钩子
  * @returns 
  */
 export function useForm() {
-    const register = () => {
-        let data = reactive({})
-        let config = ref([])
-
-        const setRow = () => {
-            let newRow = []
-            config.value.push(newRow)
-            return useRowApi(newRow)
-        }
-
-        const setData = (formData) => {
-            data = Object.assign(data, formData) // ✅ 不换引用
-        }
-        return { setRow, setData, data, config }
-    }
-
+    const register = () => createForm()
     return { register }
 }

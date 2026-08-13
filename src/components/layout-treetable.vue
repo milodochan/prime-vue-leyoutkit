@@ -71,8 +71,18 @@ const buildTreeTableData = (data) => {
     return rootNodes.map(root => build(root))
 }
 
+const columnContent = (content, length) => {
+    if (!length) return content
+    if (!content) return ''
+
+    return `${content.slice(0, length - 1)}${(content.length > length ? '...' : '')}`
+}
+
 onMounted(() => {
-    table.query_params.value = filter.filterFunc()
+    const filterData = filter.filterFunc()
+    if (filterData === null) return
+
+    table.query_params.value = filterData
     table.load()
 })
 
@@ -95,12 +105,12 @@ watch(
                     <LayoutTablebar :items="tableBarItems" :data="node?.data" />
                 </template>
             </Column>
-            <Column v-for="(item, i) in columns" v-show="item.visible" v-bind="item.props">
+            <Column v-for="(item, i) in columns" :key="i" v-show="item.visible" v-bind="item.props">
                 <template #body="{ node, index }">
                     <LayoutTableColumnSolt v-if="item.template && item.template !== undefined" :data="node?.data"
                         :template="item.template" :index="index" />
                     <span v-else v-tooltip.top="String(node?.data[item.props.field])"
-                        v-html="node?.data[item.props.field]" />
+                        v-html="columnContent(node?.data[item.props.field], item.contentLength)" />
                 </template>
             </Column>
             <Column v-if="tableBarVisible && !attrs.defaultColumnPosition" alignFrozen="right" v-bind="tableBarProps">

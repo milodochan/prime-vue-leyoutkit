@@ -1,6 +1,7 @@
 import store from './store'
 import { provide, ref } from 'vue'
 import { useMessage } from './useMessage'
+import Tag from 'primevue/tag'
 
 export function useTable() {
     let loadFunc = null
@@ -58,11 +59,11 @@ export function useTable() {
             const res = await loadFunc({ index, size }, query_params.value)
 
             data.value = attributes.value.enableTreeTable
-                ? res
-                : (res.records ?? [])
+                ? res ?? []
+                : (res?.records ?? [])
 
             if (pagination.value !== null) {
-                paginationProps.value.totalRecords = res.total ?? 0
+                paginationProps.value.totalRecords = Number.parseInt(res?.total) ?? 0
             }
 
         } catch (e) {
@@ -81,11 +82,44 @@ export function useTable() {
                 first: 0
             }
         }
+        if (attributes.value.defaultColumnSelectionMode === 'multiple') {
+            selectedNodes.value = []  // 多选模式用空数组
+        } else {
+            selectedNodes.value = null  // 单选模式用 null
+        }
         await load()
     }
 
     const setQueryParams = (filterData) => {
         query_params.value = filterData
+    }
+
+    const createTemplateBuilder = () => {
+        const data = {}
+        return {
+            setComponent(component) {
+                data.component = component
+                return this
+            },
+            setContent(content) {
+                data.content = content
+                return this
+            },
+            setTooltip(tooltip) {
+                data.tooltip = tooltip
+                return this
+            },
+            setProps(props) {
+                data.props = props
+                return this
+            },
+            build() {
+                return data
+            },
+            hasValue() {
+                return Object.keys(data).length > 0
+            }
+        }
     }
 
     const table = {
@@ -106,6 +140,7 @@ export function useTable() {
         disabledPagination: () => attributes.value.enablePagination = false,
         setColumn: (field, label = '') => {
             let columnAttributes = {
+                contentLength: null,
                 template: null,
                 visible: true,
                 props: {
@@ -120,7 +155,17 @@ export function useTable() {
                 return column
             }
             const setTemplate = (template) => {
-                columnAttributes.template = template
+                columnAttributes.template = (row) => {
+                    const builder = createTemplateBuilder()
+                    const result = template(row, builder)
+                    // builder 模式
+                    if (builder.hasValue()) {
+                        return builder.build()
+                    }
+                    // 普通 return
+                    return result
+                }
+
                 return column
             }
             const setWidth = (width) => {
@@ -136,7 +181,26 @@ export function useTable() {
                 columnAttributes.props = { ...columnAttributes.props, ...attrs }
                 return column
             }
-            const column = { enabledPer, setTemplate, setWidth, setStyle, setAttr }
+            const setContentLength = (length) => {
+                columnAttributes.contentLength = length
+                return column
+            }
+            const setTag = (contentStatusMap = {}, tagStatusMap = {}) => {
+                setTemplate((item, temp) => {
+                    const value = item[columnAttributes.props.field]
+                    const content = contentStatusMap[value] ?? value
+                    const severity = tagStatusMap[value]
+
+                    temp.setComponent(Tag)
+                        .setContent(content)
+
+                    // 只有 severity 有值时才设置 props
+                    if (severity)
+                        temp.setProps({ severity })
+                })
+                return column
+            }
+            const column = { enabledPer, setTemplate, setWidth, setStyle, setAttr, setContentLength, setTag }
             columns.value.push(columnAttributes)
             return column
         },

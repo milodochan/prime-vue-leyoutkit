@@ -5,6 +5,7 @@ import { useMessage } from '../core/useMessage'
 export function useFilter() {
     const instance = getCurrentInstance()
     const globalBuildDataFunc = instance?.appContext.config.globalProperties.$layoutkitBuildDataFunc
+    const message = useMessage()
 
     let _overrideBuildFunc = null
     const items = ref([])
@@ -35,9 +36,8 @@ export function useFilter() {
                     (Array.isArray(v) && v.length === 0)
 
                 if (isEmpty) {
-                    const message = useMessage()
-                    message.warning(`请填写【${item.label}】字段`)
-                    return
+                    message.warning(`请填写【${item.props.label}】字段`)
+                    return null
                 }
             }
 

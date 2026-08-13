@@ -14,8 +14,10 @@ const onFilterChange = (type) => {
             item.value = item.defaultValue ?? ''
         })
     }
+    const filterData = filter.filterFunc()
+    if (filterData === null) return
 
-    table.query_params.value = filter.filterFunc()
+    table.query_params.value = filterData
     type ? table.load() : table.reload()
 }
 </script>
@@ -24,15 +26,20 @@ const onFilterChange = (type) => {
     <div class="flex flex-wrap justify-left items-stretch gap-2">
         <FloatLabel v-for="(item, i) in filterItems" :key="i" variant="on" class="w-full md:w-56">
             <!-- 数字输入 -->
-            <InputNumber v-if="item.fieldType === FilterEnum.NUMBER" v-model="item.value" v-bind="item.props" />
+            <InputNumber v-if="item.fieldType === FilterEnum.NUMBER" v-model="item.value" v-bind="item.props"
+                :id="item.field" />
             <!-- 文本输入 -->
-            <InputText v-if="item.fieldType === FilterEnum.TEXT" v-model="item.value" v-bind="item.props" />
+            <InputText v-if="item.fieldType === FilterEnum.TEXT" v-model="item.value" v-bind="item.props"
+                :id="item.field" />
             <!-- 下拉框 -->
-            <Select v-if="item.fieldType === FilterEnum.SELECT" v-model="item.value" v-bind="item.props" />
+            <Select v-if="item.fieldType === FilterEnum.SELECT" v-model="item.value" v-bind="item.props"
+                :id="item.field" />
             <!-- 日期范围 -->
-            <DatePicker v-if="item.fieldType === FilterEnum.DATE_RANGE" v-model="item.value" v-bind="item.props" />
+            <DatePicker v-if="item.fieldType === FilterEnum.DATE_RANGE" v-model="item.value" v-bind="item.props"
+                :id="item.field" />
             <!-- 日期 -->
-            <DatePicker v-if="item.fieldType === FilterEnum.DATE" v-model="item.value" v-bind="item.props" />
+            <DatePicker v-if="item.fieldType === FilterEnum.DATE" v-model="item.value" v-bind="item.props"
+                :id="item.field" />
             <label :for="item.field">{{ item.props.label }}</label>
         </FloatLabel>
 

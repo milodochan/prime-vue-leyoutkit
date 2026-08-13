@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { FormEnum } from '../enum/FormEnum'
 import { formSlotStore } from '../store'
 
@@ -11,7 +11,6 @@ const props = defineProps({
     data: Object
 })
 
-const isSlot = ref(false)
 const formData = props.data
 const field = props.item?.field
 const fieldType = props.item?.fieldType
@@ -85,6 +84,11 @@ const fieldProps = computed(() => {
         ...extra
     }
 })
+// 当前内容组件是否插槽
+const isSlot = computed(() => {
+    const comp = props.item.component
+    return typeof comp === 'string' && formSlotStore.value?.has(comp)
+})
 // 当前内容组件
 const component = computed(() => {
     const comp = props.item.component
@@ -97,14 +101,13 @@ const component = computed(() => {
 
     // 是字符串 key，尝试从 formSlotStore 查找组件
     if (typeof comp === 'string' && formSlotStore.value?.has(comp)) {
-        isSlot.value = true
         return formSlotStore.value.get(comp)
     }
 
     return null
 })
 // 表单组件事件
-const onEvent = (val) => props.item.command(val, props.item, formData)
+const onEvent = (event) => props.item.command(formData[field], props.item, formData, event)
 // 组件更新
 const update = (val) => {
     if (val && typeof val === 'object' && !Array.isArray(val)) {
@@ -116,7 +119,7 @@ const update = (val) => {
         formData[field] = val
         emit('update', { field: field, value: val })
     }
-    onEvent(val)
+    props.item.command(val, props.item, formData)
 }
 </script>
 
@@ -124,51 +127,60 @@ const update = (val) => {
     <!--此组件未完成，还需封装一下-->
     <div class="flex flex-col gap-1">
         <label :for="field" v-if="!disabledLabel">{{ fieldProps.label }}</label>
-        <!-- ✅ 此处的:name="fieldProps.name"不能删除，会导致自定义组件的验证规则失效props-->
         <FormField v-if="fieldType === FormEnum.COMPONENT" as="section" v-slot="$field" :name="fieldProps.name"
             :initialValue="model">
             <component v-if="component" :is="component" @update="(val) => update(val)"
                 v-bind="isSlot ? { data: formData, props: fieldProps } : formData" />
         </FormField>
         <!--数字输入框-->
-        <InputNumber v-if="fieldType === FormEnum.INPUT_NUMBER" v-model="model" v-bind="fieldProps" />
+        <InputNumber v-if="fieldType === FormEnum.INPUT_NUMBER" v-model="model" v-bind="fieldProps" @click="onEvent"
+            :id="field" />
         <!--文本输入框-->
-        <InputText v-if="fieldType === FormEnum.INPUT_TEXT" v-model="model" v-bind="fieldProps" />
+        <InputText v-if="fieldType === FormEnum.INPUT_TEXT" v-model="model" v-bind="fieldProps" @click="onEvent"
+            :id="field" />
         <!--密码框-->
-        <Password v-if="fieldType === FormEnum.PASSWORD" v-model="model" v-bind="fieldProps" />
+        <Password v-if="fieldType === FormEnum.PASSWORD" v-model="model" v-bind="fieldProps" @click="onEvent"
+            :id="field" />
         <!--富文本-->
-        <Textarea v-if="fieldType === FormEnum.INPUT_TEXTAREA" v-model="model" v-bind="fieldProps" />
+        <Textarea v-if="fieldType === FormEnum.INPUT_TEXTAREA" v-model="model" v-bind="fieldProps" @click="onEvent"
+            :id="field" />
         <!--日历-->
-        <DatePicker v-if="fieldType === FormEnum.DATE_PICKER" v-model="model" v-bind="fieldProps" />
+        <DatePicker v-if="fieldType === FormEnum.DATE_PICKER" v-model="model" v-bind="fieldProps" @click="onEvent"
+            :id="field" />
         <!--单选-->
         <RadioButtonGroup v-if="fieldType === FormEnum.RADIO_BUTTON" v-model="model" class="flex flex-wrap gap-4"
             v-bind="fieldProps">
-            <div v-if="fieldProps.options" v-for="(option, o) in fieldProps.options" class="flex items-center gap-2">
-                <RadioButton :inputId="field + String(option.value)" :value="option.value" />
+            <div v-for="(option, o) in fieldProps?.options" :key="o" class="flex items-center gap-2">
+                <RadioButton :inputId="field + String(option.value)" :value="option.value" @click="onEvent"
+                    :id="field + String(option.value)" />
                 <label :for="field + String(option.value)">{{ option.label }}</label>
             </div>
         </RadioButtonGroup>
         <!--多选-->
         <CheckboxGroup v-if="fieldType === FormEnum.CHECKBOX" v-model="model" class="flex flex-wrap gap-4"
             v-bind="fieldProps">
-            <div v-if="fieldProps.options" v-for="(option, o) in fieldProps.options" class="flex items-center gap-2">
-                <Checkbox :inputId="field + String(option.value)" :value="option.value" />
+            <div v-for="(option, o) in fieldProps?.options" :key="o" class="flex items-center gap-2">
+                <Checkbox :inputId="field + String(option.value)" :value="option.value" @click="onEvent"
+                    :id="field + String(option.value)" />
                 <label :for="field + String(option.value)">{{ option.label }}</label>
             </div>
         </CheckboxGroup>
         <!--切换按钮-->
         <div v-if="fieldType === FormEnum.TOGGLE_BUTTON" class="flex flex-wrap gap-4">
-            <ToggleSwitch v-model="model" v-bind="fieldProps" />
+            <ToggleSwitch v-model="model" v-bind="fieldProps" @click="onEvent" :id="field" />
             <label :for="field" style="margin-top: 3px;">
                 {{ fieldProps.placeholder }}
             </label>
         </div>
         <!--下拉单选-->
-        <Select v-if="fieldType === FormEnum.SELECT" v-model="model" v-bind="fieldProps" />
+        <Select v-if="fieldType === FormEnum.SELECT" v-model="model" v-bind="fieldProps" @change="onEvent"
+            :id="field" />
         <!--下拉多选-->
-        <MultiSelect v-if="fieldType === FormEnum.MULTI_SELECT" v-model="model" v-bind="fieldProps" />
+        <MultiSelect v-if="fieldType === FormEnum.MULTI_SELECT" v-model="model" v-bind="fieldProps" @click="onEvent"
+            :id="field" />
         <!--树形单选-->
-        <TreeSelect v-if="fieldType === FormEnum.TREE_SELECT" v-model="model" v-bind="fieldProps" />
+        <TreeSelect v-if="fieldType === FormEnum.TREE_SELECT" v-model="model" v-bind="fieldProps" @change="onEvent"
+            :id="field" />
         <!--触发规则信息-->
         <Message v-if="invalid" severity="error" size="small" variant="simple" class="mt-1 mf-1">
             {{ message }}

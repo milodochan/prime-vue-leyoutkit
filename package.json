@@ -1,9 +1,10 @@
 {
   "name": "@layoutkit/prime-vue-layoutkit",
-  "version": "0.1.7",
+  "version": "0.1.12",
   "main": "dist/prime-vue-layoutkit.cjs.js",
   "module": "dist/prime-vue-layoutkit.es.js",
   "type": "module",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@primevue/auto-import-resolver": "^4.5.4",
     "@tailwindcss/cli": "^4.1.18",
+    "@typescript/typescript6": "^6.0.2",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vitejs/plugin-vue-jsx": "^5.0.0",
     "sass": "^1.63.0",
