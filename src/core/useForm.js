@@ -12,7 +12,7 @@ const useRowApi = (newRow) => {
             field,
             fieldType: FormEnum.INPUT_TEXT,
             require: false,
-            disabledLabel: false,
+            disableLabel: false,
             props: {
                 name: field,
                 label: label || field,
@@ -25,8 +25,8 @@ const useRowApi = (newRow) => {
             command: () => { }
         }
 
-        const disabledLabel = () => {
-            column.disabledLabel = true
+        const disableLabel = () => {
+            column.disableLabel = true
             return columnApi
         }
         const setRule = (rules) => {
@@ -93,7 +93,7 @@ const useRowApi = (newRow) => {
         const change = (fn) => { column.attrFunc = fn; return columnApi }
 
         const columnApi = {
-            disabledLabel, setRule, setLabel, setOptions, setType, setPlaceholder,
+            disableLabel, setRule, setLabel, setOptions, setType, setPlaceholder,
             onRequire, setAttr, setComponent, hide, on, change, setColumn
         }
 

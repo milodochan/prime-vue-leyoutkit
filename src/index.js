@@ -14,6 +14,8 @@ export { useConfig } from './core/useConfig'
 export { useMessage } from './core/useMessage'
 export { useTable } from './core/useTable'
 export { useTableBar } from './core/useTableBar'
+export { useLayout } from './core/useLayout'
+export { useTabStore } from './core/useTabStore'
 export { default as store } from './core/store'
 
 // enum

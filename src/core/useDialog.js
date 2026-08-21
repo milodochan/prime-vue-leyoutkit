@@ -19,24 +19,24 @@ export function useDialog() {
             const attributes = ref({
                 id: '',
                 loading: true,
-                disabledCancelButton: false,
-                disabledCancelButtonIcon: false,
+                disableCancelButton: false,
+                disableCancelButtonIcon: false,
                 component: null,
                 propsData: {},
                 formData: null,
                 closeFunc: (val) => { }
             })
 
-            const disabledCancel = () => {
-                attributes.value.disabledCancelButton = true
+            const disableCancel = () => {
+                attributes.value.disableCancelButton = true
                 return method
             }
 
-            const disabledCancelIcon = () => {
-                attributes.value.disabledCancelButtonIcon = true
+            const disableCancelIcon = () => {
+                attributes.value.disableCancelButtonIcon = true
                 return method
             }
-            const enabledMaximizable = () => {
+            const enableMaximizable = () => {
                 props.value.maximizable = true
                 return method
             }
@@ -137,9 +137,9 @@ export function useDialog() {
                 setForm,
                 setFormData,
                 setContentStyle,
-                disabledCancel,
-                disabledCancelIcon,
-                enabledMaximizable
+                disableCancel,
+                disableCancelIcon,
+                enableMaximizable
             }
 
             attributes.value.id = `${Date.now()}-${Math.random()}`

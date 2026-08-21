@@ -12,7 +12,7 @@ export function useTableBar() {
     const setTitle = (title) => props.value.header = title
     const setWidth = (width) => props.value.style = { ...props.value.style, width }
     const setStyle = (style) => props.value.style = { ...props.value.style, ...style }
-    const enabledForzen = () => setAttr({ frozen: true })
+    const enableForzen = () => setAttr({ frozen: true })
     const registerKey = (keyObj) => keyRef.value = keyObj
     const register = (label, callback) => {
         let id = `action_${Date.now()}_${items.value.length}`
@@ -39,7 +39,7 @@ export function useTableBar() {
             item._hideFunc = func
             return api
         }
-        const enabledPer = (id) => {
+        const enablePer = (id) => {
             item.perKey = keyRef.value.get(id)
             return api
         }
@@ -55,7 +55,7 @@ export function useTableBar() {
             return api
         }
 
-        const api = { enabledPer, ignorePer, setAttr, hide, on }
+        const api = { enablePer, ignorePer, setAttr, hide, on }
 
         if (typeof callback === 'function') {
             callback(api)
@@ -69,6 +69,6 @@ export function useTableBar() {
     provide('tableBar', { props, items })
     return {
         register, setAttr, setTitle, setWidth,
-        setStyle, enabledForzen, registerKey
+        setStyle, enableForzen, registerKey
     }
 }

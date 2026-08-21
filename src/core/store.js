@@ -1,7 +1,7 @@
 import CryptoJS from 'crypto-js'
 
 let dataCache = null
-let enabledSession = false
+let enableSession = false
 
 const STORAGE_KEY = '__store__'
 const SECRET_KEY = '__store_secret__'
@@ -14,17 +14,17 @@ const SECRET_KEY = '__store_secret__'
 
 function encryptData(data) {
   const SECRET = CryptoJS.lib.WordArray.random(32).toString()
-  enabledSession ? sessionStorage.setItem(SECRET_KEY, SECRET) : localStorage.setItem(SECRET_KEY, SECRET)
+  enableSession ? sessionStorage.setItem(SECRET_KEY, SECRET) : localStorage.setItem(SECRET_KEY, SECRET)
 
   const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), SECRET).toString()
-  enabledSession ? sessionStorage.setItem(STORAGE_KEY, encrypted) : localStorage.setItem(STORAGE_KEY, encrypted)
+  enableSession ? sessionStorage.setItem(STORAGE_KEY, encrypted) : localStorage.setItem(STORAGE_KEY, encrypted)
 
   dataCache = data
 }
 
 function decryptData() {
-  const encrypted = enabledSession ? sessionStorage.getItem(STORAGE_KEY) : localStorage.getItem(STORAGE_KEY)
-  const SECRET = enabledSession ? sessionStorage.getItem(SECRET_KEY) : localStorage.getItem(SECRET_KEY)
+  const encrypted = enableSession ? sessionStorage.getItem(STORAGE_KEY) : localStorage.getItem(STORAGE_KEY)
+  const SECRET = enableSession ? sessionStorage.getItem(SECRET_KEY) : localStorage.getItem(SECRET_KEY)
 
   if (!encrypted || !SECRET) return null
 
@@ -87,7 +87,7 @@ const store = {
   /**
    * 🔥 只修改权限开关 → 启用权限
    */
-  enabledPer() {
+  enablePer() {
     const data = this.get() || {
       permissions: [],
       perEnabled: true
@@ -100,7 +100,7 @@ const store = {
   /**
    * 🔥 只修改权限开关 → 禁用权限（超级管理员模式）
    */
-  disabledPer() {
+  disablePer() {
     const data = this.get() || {
       permissions: [],
       perEnabled: false
@@ -113,13 +113,13 @@ const store = {
    * 清除缓存数据
    */
   clear() {
-    if (!enabledSession) {
+    if (!enableSession) {
       localStorage.removeItem(STORAGE_KEY)
       localStorage.removeItem(SECRET_KEY)
     }
   },
   enabledSession() {
-    enabledSession = true
+    enableSession = true
   }
 }
 

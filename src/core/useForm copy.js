@@ -19,7 +19,7 @@ const useRowApi = (newRow) => {
 					options: [],
 				},
 				rules: (schema) => schema, // 是一个方法
-				disabledLabel: false,
+				disableLabel: false,
 				hideFunc: () => true,
 				attrFunc: null,
 				command: () => { },
@@ -28,8 +28,8 @@ const useRowApi = (newRow) => {
 			newRow.push(column)
 
 			const columnApi = {
-				disabledLabel() {
-					column.disabledLabel = true
+				disableLabel() {
+					column.disableLabel = true
 					return columnApi
 				},
 				setRule(rules) {

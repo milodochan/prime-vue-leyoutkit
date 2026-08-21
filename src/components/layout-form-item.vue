@@ -14,7 +14,7 @@ const props = defineProps({
 const formData = props.data
 const field = props.item?.field
 const fieldType = props.item?.fieldType
-const disabledLabel = props.item?.disabledLabel || false
+const disableLabel = props.item?.disableLabel || false
 const model = computed({
     get() {
         let val = formData[field]
@@ -126,7 +126,7 @@ const update = (val) => {
 <template>
     <!--此组件未完成，还需封装一下-->
     <div class="flex flex-col gap-1">
-        <label :for="field" v-if="!disabledLabel">{{ fieldProps.label }}</label>
+        <label :for="field" v-if="!disableLabel">{{ fieldProps.label }}</label>
         <FormField v-if="fieldType === FormEnum.COMPONENT" as="section" v-slot="$field" :name="fieldProps.name"
             :initialValue="model">
             <component v-if="component" :is="component" @update="(val) => update(val)"

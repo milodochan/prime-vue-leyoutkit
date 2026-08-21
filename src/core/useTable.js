@@ -13,7 +13,7 @@ export function useTable() {
     const selectedNodes = ref()
     const attributes = ref({
         enableTreeTable: false,
-        enabledDefaultColumn: true,
+        enableDefaultColumn: true,
         enablePagination: true,
         defaultColumnSelectionMode: 'multiple',
         defaultColumnPosition: false,
@@ -131,13 +131,13 @@ export function useTable() {
         setPageOptions: (options) => paginationProps.value.rowsPerPageOptions = options,
         setRowKey: (dataKey) => props.value.dataKey = dataKey,
         setParentKey: (dataKey) => props.value.dataParentKey = dataKey,
-        disabledDefaultCloumn: () => attributes.value.enabledDefaultColumn = false,
-        enabledTree: () => {
+        disableDefaultCloumn: () => attributes.value.enableDefaultColumn = false,
+        enableTree: () => {
             attributes.value.enableTreeTable = true
             selectedNodes.value = {}
         },
-        enabledLeftPosition: () => attributes.value.defaultColumnPosition = true,
-        disabledPagination: () => attributes.value.enablePagination = false,
+        enableLeftPosition: () => attributes.value.defaultColumnPosition = true,
+        disablePagination: () => attributes.value.enablePagination = false,
         setColumn: (field, label = '') => {
             let columnAttributes = {
                 contentLength: null,
@@ -150,7 +150,7 @@ export function useTable() {
                 }
             }
 
-            const enabledPer = (id) => {
+            const enablePer = (id) => {
                 columnAttributes.visible = store.hasPer(keyRef.value.get(id))
                 return column
             }
@@ -200,7 +200,7 @@ export function useTable() {
                 })
                 return column
             }
-            const column = { enabledPer, setTemplate, setWidth, setStyle, setAttr, setContentLength, setTag }
+            const column = { enablePer, setTemplate, setWidth, setStyle, setAttr, setContentLength, setTag }
             columns.value.push(columnAttributes)
             return column
         },

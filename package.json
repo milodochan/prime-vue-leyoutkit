@@ -1,6 +1,6 @@
 {
   "name": "@layoutkit/prime-vue-layoutkit",
-  "version": "0.1.12",
+  "version": "0.1.15",
   "main": "dist/prime-vue-layoutkit.cjs.js",
   "module": "dist/prime-vue-layoutkit.es.js",
   "type": "module",

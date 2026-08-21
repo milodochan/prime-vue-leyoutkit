@@ -14,7 +14,7 @@ const dialogProps = computed(() => dialog.value.get().props.value)
 const dialogAttributes = computed(() => dialog.value.get().attributes.value)
 const dialogActions = computed(() => dialog.value.get().actions.value)
 const actions = computed(() => {
-    if (dialogAttributes.value.disabledCancelButton) {
+    if (dialogAttributes.value.disableCancelButton) {
         return dialogActions.value
     }
 
@@ -22,7 +22,7 @@ const actions = computed(() => {
         ...dialogActions.value,
         {
             label: '取消',
-            icon: dialogAttributes.value.disabledCancelButtonIcon ? '' : 'pi pi-times',
+            icon: dialogAttributes.value.disableCancelButtonIcon ? '' : 'pi pi-times',
             type: 'secondary',
             loading: false,
             command: () => {

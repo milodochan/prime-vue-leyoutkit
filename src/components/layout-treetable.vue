@@ -98,7 +98,7 @@ watch(
 <template>
     <div>
         <TreeTable :value="data" v-model:selectionKeys="selectedNodes" v-bind="props">
-            <Column v-if="attrs.enabledDefaultColumn" expander headerStyle="width: 7rem"
+            <Column v-if="attrs.enableDefaultColumn" expander headerStyle="width: 7rem"
                 v-bind="attrs.defaultColumnProps" />
             <Column v-if="tableBarVisible && attrs.defaultColumnPosition" alignFrozen="left" v-bind="tableBarProps">
                 <template #body="{ node, index }">

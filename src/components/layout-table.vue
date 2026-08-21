@@ -58,7 +58,7 @@ onMounted(() => {
     <div>
         <!--DataTable-->
         <DataTable :value="data" v-model:selection="selectedNodes" v-bind="props">
-            <Column v-if="attrs.enabledDefaultColumn" :selectionMode="attrs.defaultColumnSelectionMode"
+            <Column v-if="attrs.enableDefaultColumn" :selectionMode="attrs.defaultColumnSelectionMode"
                 v-bind="attrs.defaultColumnProps" />
             <Column v-if="tableBarVisible && attrs.defaultColumnPosition" alignFrozen="left" v-bind="tableBarProps">
                 <template #body="{ data, index }">

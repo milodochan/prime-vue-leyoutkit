@@ -72,7 +72,7 @@ if (field.type === FormEnum.SELECT) { ... }
 * 需要在项目中使用权限管理相关设置，如下代码所示。
 ```js
 import { store as storePer } from '@layoutkit/prime-vue-layoutkit'
-# 此处数据存储到localStorage中，如需sessionStorage, 请调用storePer.enabledSession(), 更多使用参考store相关内容。
+# 此处数据存储到localStorage中，如需sessionStorage, 请调用storePer.enableSession(), 更多使用参考store相关内容。
 async getPermission() {
     try {
         const res = await api.getPermission()
@@ -80,10 +80,10 @@ async getPermission() {
             this.menus = res.data.menus.sort((a, b) => a.sort - b.sort)
             this.permissions = res.data.pers
             this.userInfo = res.data.userInfo
-            if (res.data.super) storePer.disabledPer()  // 超管不验证权限
+            if (res.data.super) storePer.disablePer()  // 超管不验证权限
             else {
                 storePer.set(res.data.pers)             // 将权限数据传递给权限控制模块
-                storePer.enabledPer()                   // 启用权限控制   
+                storePer.enablePer()                   // 启用权限控制   
             }
         }
         return res
@@ -120,10 +120,10 @@ app.config.globalProperties.$layoutkitBuildDataFunc = (items) => { return items 
 | `setPageOptions`          | 设置分页选项 |
 | `setRowKey`               | 数据行的字段 |
 | `setParentKey`            | 树结构表格数据行的父级字段 |
-| `disabledDefaultCloumn`   | 禁用默认列 |
-| `enabledTree`             | 启用树结构表格 |
-| `enabledLeftPosition`     | 启用左侧工具栏，默认右侧 |
-| `disabledPagination`      | 禁用分页组件 |
+| `disableDefaultCloumn`   | 禁用默认列 |
+| `enableTree`             | 启用树结构表格 |
+| `enableLeftPosition`     | 启用左侧工具栏，默认右侧 |
+| `disablePagination`      | 禁用分页组件 |
 | `reload`                  | 重新加载表格，并将分页页码重置为 1 |
 | `registerKey`             | 注册权限对象 |
 | `setColumn`               | 表格列函数，详细参考下面表格               |
@@ -131,7 +131,7 @@ app.config.globalProperties.$layoutkitBuildDataFunc = (items) => { return items 
 ### setColumn
 | 方法名称                     | 描述                                     |
 | ---------------------- | -------------------------------------- |
-| `enabledPer`          | 设置列是否使用权限控制      |
+| `enablePer`          | 设置列是否使用权限控制      |
 | `setTemplate`         | 重写列的内容，支持返回一般内容以及使用组件返回 |
 | `setWidth`            | 设置列的宽度 |
 | `setStyle`            | 设置列的样式 |
@@ -140,7 +140,7 @@ app.config.globalProperties.$layoutkitBuildDataFunc = (items) => { return items 
 
 ### 代码参考
 ``` js
-table.enabledLeftPosition()
+table.enableLeftPosition()
 table.setPageOptions([10, 15, 20])
 table.registerLoader(async (page, params) => {
     const pageData = {
@@ -152,7 +152,7 @@ table.registerLoader(async (page, params) => {
     return res.code === 0 ? res.data : []
 })
 table.setColumn('id', '查看')
-    .enabledPer('look')
+    .enablePer('look')
     .setAttr({ frozen: true, alignFrozen: 'left' })
     .setStyle({ color: 'red' })
     .setWidth('20rem')
@@ -210,7 +210,7 @@ filter.register('name', '姓名')
 
 | 方法                               | 说明                     |
 | -------------------------------- | ---------------------- |
-| `enabledPer(id: string)`     | 设置工具栏中按钮是否使用权限控制       |
+| `enablePer(id: string)`     | 设置工具栏中按钮是否使用权限控制       |
 | `ignorePer()`                | 设置工具栏中按钮是否忽略权限控制       |
 | `setAttr(attrs: object)`     | 设置工具栏中按钮的属性       |
 | `on(val: func)`              | 事件函数         |
@@ -221,7 +221,7 @@ filter.register('name', '姓名')
 ```js
 toolbar.register('新增')
   .setAttr({ type: 'success', icon: 'Plus' })
-  .enabledPer('add')
+  .enablePer('add')
   .on(() => {
     console.log('点击新增')
   })
@@ -237,7 +237,7 @@ toolbar.register('新增')
 | ---------------------- | -------------------------------------- |
 | `register`                | 注册按钮，返回按钮对象，可链式设置属性, label字段选填      |
 | `registerKey`             | 注册权限对象     |
-| `enabledForzen`           | 启用悬停     |
+| `enableForzen`           | 启用悬停     |
 | `setAttr`                 | 设置属性     |
 | `setTitle`                | 设置标题     |
 | `setWidth`                | 设置宽      |
@@ -247,7 +247,7 @@ toolbar.register('新增')
 
 | 方法                               | 说明                     |
 | -------------------------------- | ---------------------- |
-| `enabledPer(id: string)`     | 设置工具栏中按钮是否使用权限控制       |
+| `enablePer(id: string)`     | 设置工具栏中按钮是否使用权限控制       |
 | `ignorePer()`                | 设置工具栏中按钮是否忽略权限控制       |
 | `setAttr(attrs: object)`     | 设置工具栏中按钮的属性       |
 | `hide(val: func)`            | 隐藏事件函数         |
@@ -258,7 +258,7 @@ toolbar.register('新增')
 ```js
 tablebar.register('编辑')
   .setAttr({ type: 'primary', icon: 'Edit' })
-  .enabledPer('edit')
+  .enablePer('edit')
   .hide((item) => item.status === 1)
   .on(() => {
     console.log('点击新增')
@@ -290,9 +290,9 @@ tablebar.register('编辑')
 | `show()`                              | 显示弹窗并设置 dialog.instance |
 | `hide()`                              | 隐藏弹窗 |
 | `destroy()`                           | 销毁弹窗，清空数据，重置 loading |
-| `disabledCancel()`                    | 禁用取消按钮 |
-| `disabledCancelIcon()`                | 禁用取消按钮图标 |
-| `enabledMaximizable()`                | 启用最大化按钮 |
+| `disableCancel()`                    | 禁用取消按钮 |
+| `disableCancelIcon()`                | 禁用取消按钮图标 |
+| `enableMaximizable()`                | 启用最大化按钮 |
 | `setBtn(label, command, type, icon)`  | 添加或覆盖按钮 |
 
 #### setBtn
@@ -347,7 +347,7 @@ myDialog.setTitle('用户信息').setFormData({ name: '张三', age: 21 }).show(
 #### callback
 | 方法 |  说明 |
 |------|------|
-| `disabledLabel()` | 隐藏表单标题 |
+| `disableLabel()` | 隐藏表单标题 |
 | `setLabel(label: string)` | 设置标题 |
 | `setOptions(options: array, type: FormEnum)` | 设置部门组件的选项数据, type：默认值是FormEnum.SELECT |
 | `setType(type：FormEnum)` | 设置组件类型，详细参考FormEnum枚举 |
@@ -397,7 +397,7 @@ myDialog.setTitle('用户信息').setFormData({ name: '张三', age: 21 }).show(
   # 注册权限
   key.register('view', 'menu:view')
   # 工具栏使用权限
-  toolbar.register('预览').enabledPer('view').on(()=> {})
+  toolbar.register('预览').enablePer('view').on(()=> {})
 
   ```
 
@@ -566,7 +566,7 @@ FilterOperatorEnum = {
               }, 'primary')
 
   // 工具栏
-  toolbar.register('添加').enabledPer('view').setAttr({ type: 'success' }).on(async () => {
+  toolbar.register('添加').enablePer('view').setAttr({ type: 'success' }).on(async () => {
       userForm.setData({ name: '', age: 0 })
       userDialog.setTitle('添加用户').setForm(userForm).show()
   })

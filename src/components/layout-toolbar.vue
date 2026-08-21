@@ -6,9 +6,11 @@ const table = inject('table', {})
 const toolBar = inject('toolBar', {})
 const toolBarItems = computed(() => toolBar.items.value ?? [])
 const onBarEvent = async (item, event) => {
-    item.loading = true
-    await item._command(table.selectedNodes.value ?? null, event)
-    item.loading = false
+    item.props.loading = true
+    const selectData = table.selectedNodes.value ?? null
+    const result = toolBar.validSelect(selectData, item.mode)
+    if (result) await item._command(selectData, event)
+    item.props.loading = false
 }
 const validPer = (item) => {
     if (item.ignorePer) return true
