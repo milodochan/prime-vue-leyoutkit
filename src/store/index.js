@@ -3,6 +3,7 @@ import { markRaw, reactive, ref } from 'vue'
 const formSlotStore = ref(new Map())
 const dialogSlotStore = ref(new Map())
 const columnSlotStore = ref(new Map())
+const dataViewSlotStore = ref(new Map())
 
 /**
  * dialog store
@@ -24,4 +25,11 @@ const registerProvide = (id, comp) => {
     dialogSlotStore.value.set(id, markRaw(comp))
 }
 
-export { formSlotStore, dialogSlotStore, columnSlotStore, dialogStore, registerProvide }
+export {
+    formSlotStore,
+    dialogSlotStore,
+    columnSlotStore,
+    dialogStore,
+    dataViewSlotStore,
+    registerProvide
+}

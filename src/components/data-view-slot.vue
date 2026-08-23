@@ -1,6 +1,6 @@
 <script setup>
 import { markRaw, onBeforeUnmount, onMounted, useSlots } from 'vue'
-import { columnSlotStore } from '../store'
+import { dataViewSlotStore } from '../store'
 
 const slots = useSlots()
 const props = defineProps({
@@ -10,20 +10,18 @@ const props = defineProps({
     }
 })
 
-onBeforeUnmount(() => columnSlotStore.value.delete(props.name))
-onMounted(() => {
-    const slotRender = slots.default
+onBeforeUnmount(() => dataViewSlotStore.value.delete(props.name))
+onMounted(async () => {
     // 保存一个真正的函数式组件
-    columnSlotStore.value.set(
+    const slotRender = slots.default
+    dataViewSlotStore.value.set(
         props.name,
         markRaw({
             // 这里返回的是函数式组件对象
             setup(props, { attrs }) {
-                // console.log(attrs)
-                // console.log(attrs.content)
                 return () => slotRender?.({
                     props: { ...props, ...attrs.props },   // 外部传入的数据都在 attrs
-                    data: attrs.content
+                    data: attrs
                 })
             }
         })

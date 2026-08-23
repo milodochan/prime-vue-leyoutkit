@@ -1,6 +1,7 @@
 export { default as LayoutForm } from './components/layout-form.vue'
 export { default as LayoutMessage } from './components/layout-message.vue'
 export { default as DialogContentSlot } from './components/dialog-content-slot.vue'
+export { default as DataViewSolt } from './components/data-view-slot.vue'
 export { default as FormItemSlot } from './components/form-item-slot.vue'
 export { default as ColumnItemSlot } from './components/column-item-slot.vue'
 export { default as LayoutTable } from './components/layout-table.vue'

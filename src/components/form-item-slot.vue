@@ -2,6 +2,8 @@
 import { markRaw, onBeforeUnmount, onMounted, useSlots, defineEmits } from 'vue'
 import { formSlotStore } from '../store'
 
+const slots = useSlots()
+const emit = defineEmits(['update'])
 const props = defineProps({
     name: {
         type: String,
@@ -9,9 +11,7 @@ const props = defineProps({
     }
 })
 
-const slots = useSlots()
-const emit = defineEmits(['update'])
-
+onBeforeUnmount(() => formSlotStore.value.delete(props.name))
 onMounted(() => {
     const slotRender = slots.default
     // 保存一个真正的函数式组件
@@ -32,11 +32,6 @@ onMounted(() => {
         })
     )
 })
-
-onBeforeUnmount(() => {
-    formSlotStore.value.delete(props.name)
-})
-
 </script>
 
 <template>

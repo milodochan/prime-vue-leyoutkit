@@ -2,6 +2,7 @@
 import { markRaw, onBeforeUnmount, onMounted, useSlots } from 'vue'
 import { dialogSlotStore } from '../store'
 
+const slots = useSlots()
 const props = defineProps({
     name: {
         type: String,
@@ -9,8 +10,7 @@ const props = defineProps({
     }
 })
 
-const slots = useSlots()
-
+onBeforeUnmount(() => dialogSlotStore.value.delete(props.name))
 onMounted(async () => {
     // 保存一个真正的函数式组件
     const slotRender = slots.default
@@ -27,11 +27,6 @@ onMounted(async () => {
         })
     )
 })
-
-onBeforeUnmount(() => {
-    dialogSlotStore.value.delete(props.name)
-})
-
 </script>
 
 <template>

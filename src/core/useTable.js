@@ -12,6 +12,7 @@ export function useTable() {
     const columns = ref([])
     const selectedNodes = ref()
     const attributes = ref({
+        enableTable: true,
         enableTreeTable: false,
         enableDefaultColumn: true,
         enablePagination: true,
@@ -132,8 +133,13 @@ export function useTable() {
         setRowKey: (dataKey) => props.value.dataKey = dataKey,
         setParentKey: (dataKey) => props.value.dataParentKey = dataKey,
         disableDefaultCloumn: () => attributes.value.enableDefaultColumn = false,
+        disable: () => {
+            attributes.value.enableTreeTable = false
+            attributes.value.enableTable = false
+        },
         enableTree: () => {
             attributes.value.enableTreeTable = true
+            attributes.value.enableTable = false
             selectedNodes.value = {}
         },
         enableLeftPosition: () => attributes.value.defaultColumnPosition = true,
